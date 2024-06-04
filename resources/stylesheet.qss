@@ -1,0 +1,124 @@
+/* Global styles */
+* {
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(188, 231, 215, 255), stop:1 rgba(122, 215, 255, 255)); /* Gradient background for main window */
+    font-family: 'Segoe UI'; /* Reset default font-family */
+    font: 12pt; /* Reset default font */
+    margin: 0; /* Reset default margin */
+    padding: 0; /* Reset default padding */
+    border: none; /* Remove default border */
+    outline: none; /* Remove default outline */
+}
+
+QToolTip {
+    background-color: #f8f8f2; /* Light background color for tooltip */
+    border: 1px solid #CCC; /* Light grey border around the tooltip */
+    background-image: none; /* No background image for the tooltip */
+    background-position: left center; /* Position background (if any) at the left center */
+    background-repeat: no-repeat; /* Prevent background image from repeating */
+    border-left: 5px solid rgb(255, 121, 198); /* Pink left border to highlight the tooltip */
+    text-align: center; /* Center-align the text inside the tooltip */
+    padding-left: 5px; /* Padding on the left side to create space between text and border */
+}
+
+
+/* QCompleter styles */
+QCompleter {
+    border: 1px solid #cccccc; /* Light grey border around completer drop-down */
+    border-radius: 5px; /* Rounded corners for completer drop-down */
+    background-color: #ffffff; /* White background for completer drop-down */
+    font-size: 14px; /* Font size for completer text */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+QCompleter::item {
+    background-color: #f8f8f8; /* Light grey background for completer items */
+    padding: 8px;  Padding inside completer items
+    color: #333333; /* Default text color for completer items */
+    border-bottom: 1px solid #e0e0e0; /* Light border between items for separation */
+    transition: background-color 0.3s, color 0.3s; /* Smooth transition for background and text color changes */
+}
+
+QCompleter::item:hover {
+    background-color: #e0f7fa; /* Light blue background when hovered */
+    color: #00796b; /* Darker text color when hovered */
+}
+
+QCompleter::item:selected {
+    background-color: #4a90e2; /* Darker blue background when completer item is selected */
+    color: #ffffff; /* White text color when completer item is selected */
+}
+
+/* Content frame */
+#content_frm {
+    background: transparent;
+    padding: 5px; /* Padding inside content frame */
+}
+
+/* Search frame */
+#search_frm {
+    background-color: #f0f0f0; /* Light grey background for search frame */
+    border: 2px solid #cccccc; /* Light grey border for search frame */
+    border-radius: 5px; /* Rounded corners for search frame */
+}
+
+#search_frm:hover {
+    border-color: #000000; /* Change border color to black when hovered */
+}
+
+/* Search input */
+#search_item {
+    background-color: #f0f0f0; /* Light grey background for search input */
+    border-radius: 5px; /* Rounded corners for search input */
+    padding: 8px; /* Padding inside search input */
+    font-size: 14px; /* Font size for search input text */
+}
+
+/* Search button */
+#search_item_btn {
+    background-color: #f0f0f0; /* Light grey background for search button */
+    border-radius: 5px; /* Rounded corners for search button */
+    padding: 2px 0px; /* Vertical padding for search button */
+    padding-left: 10px; /* Left padding for search button */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    margin: 2px; /* Margin around search button */
+}
+
+#search_item_btn:hover {
+    padding-left: 0px; /* Remove left padding when hovered */
+}
+
+#search_item_btn:pressed {
+    padding-left: 10px; /* Restore left padding when pressed */
+}
+
+/* Search results */
+#listWidget {
+    background-color: #ffffff; /* White background for list widget */
+    border: 2px solid #cccccc; /* Light grey border for list widget */
+    border-radius: 10px; /* Rounded corners for list widget */
+    padding: 10px; /* Padding inside list widget */
+    font-size: 14px; /* Font size for list widget items */
+    alternate-background-color: #f4f4f4; /* Alternating row colors for list items */
+    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for background and border color changes */
+}
+
+#listWidget::item {
+    background-color: #f8f8f8; /* Light grey background for list items */
+    border: 2px solid #cccccc; /* Light grey border for list items */
+    border-radius: 5px; /* Rounded corners for list items */
+    padding: 10px; /* Padding inside list items */
+    margin-bottom: 10px; /* Margin below each list item */
+    color: #333333; /* Default text color for list items */
+    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for background and border color changes */
+}
+
+#listWidget::item:hover {
+    background-color: #eaeaea; /* Light grey background when hovered */
+    border: 2px solid green; /* Green border when hovered */
+}
+
+#listWidget::item:selected {
+    background-color: #4a90e2; /* Darker blue background when selected */
+    border: 2px solid #2f6aa8; /* Lighter blue border when selected */
+    color: #ffffff; /* White text color when selected */
+}
