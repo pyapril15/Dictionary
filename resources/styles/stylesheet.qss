@@ -71,6 +71,7 @@ QCompleter::item:selected {
     border-radius: 5px; /* Rounded corners for search input */
     padding: 8px; /* Padding inside search input */
     font-size: 14px; /* Font size for search input text */
+    color: #000
 }
 
 /* Search button */
