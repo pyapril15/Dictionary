@@ -3,7 +3,7 @@ pipeline {
 
     environment {
 		PROJECT_NAME = "Dictionary"
-        VERSION = "v1.0.1"
+        VERSION = "v1.0.0"
         REPO = "pyapril15/${PROJECT_NAME}"
 
         BUILD_DIR = "dist"
@@ -149,7 +149,7 @@ pipeline {
                         git pull origin main
 
                         REM Merge build into main
-                        git merge origin/build --no-ff -m "Auto-merged build → main(Jenkins)"
+                        git merge origin/build --no-ff -m "Auto-merged build to main(Jenkins)"
 
                         REM Push updated main
                         git push origin main
