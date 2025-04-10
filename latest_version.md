@@ -1,8 +1,8 @@
-# 🚀 Dictionary v1.0.0 - Enhanced Auto-Updater & Performance Improvements
+# 🚀 Dictionary v1.0.1 - Enhanced Auto-Updater & Performance Improvements
 
 ![Dictionary Banner](prj_img/dictionary.png)
 
-## 🔹 What's New in v1.0.0?  
+## 🔹 What's New in v1.0.1?  
 
 ### ✅ Enhanced Auto-Updater  
 - Improved update window UI with real-time progress updates.  
