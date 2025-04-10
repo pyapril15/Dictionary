@@ -2,7 +2,7 @@
 
 ![Dictionary Banner](prj_img/dictionary.png)
 
-## 🔹 What's New in v1.0.1?  
+## 🔹 What's New in v1.0.0?  
 
 ### ✅ Enhanced Auto-Updater  
 - Improved update window UI with real-time progress updates.  
@@ -26,7 +26,7 @@
 
 ## 📥 Download & Install  
 
-👉 **[Download Dictionary.exe](https://github.com/pyapril15/QRCodeGenerator/releases/download/v1.0.3/QRCodeGenerator.exe)**  
+👉 **[Download Dictionary.exe](https://github.com/pyapril15/Dictionary/releases/download/v1.0.0/Dictionary.exe)**  
 Simply run the `.exe` to start generating Dictionary instantly!
 
 ---
