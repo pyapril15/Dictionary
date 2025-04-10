@@ -39,21 +39,19 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['tkinter', '_tkinter'],  # Remove unused GUI frameworks
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    noarchive=False
+    excludes=['tkinter', '_tkinter'],
+    noarchive=False,
+    optimize=0,
 )
 
 # === PYZ Archive (pure Python code) ===
-pyz = PYZ(a.pure, a.zipped_data, cipher=None)
+pyz = PYZ(a.pure)
 
 # === Executable Settings ===
 exe = EXE(
     pyz,
     a.scripts,
     a.binaries,
-    a.zipfiles,
     a.datas,
     [],
     name='Dictionary',
@@ -63,9 +61,11 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,  # GUI app
+    console=False,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
     icon=str(icons_dir / "app_icon.ico"),
 )
-
-# === Optional: Single-file bundle (uncomment if needed) ===
-# coll = COLLECT(exe, a.binaries, a.zipfiles, a.datas, strip=False, upx=True, name='Dictionary')
