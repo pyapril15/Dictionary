@@ -25,10 +25,13 @@ class _BaseConfig(metaclass=_SingletonMeta):
         self._is_frozen = hasattr(sys, "_MEIPASS") or getattr(sys, 'frozen', False)
 
         # === App Directory (static files: icons, .qss, etc.) ===
+        """
         if self._is_frozen:
             self._base_dir = Path(sys.executable).resolve().parent.parent
         else:
             self._base_dir = Path(__file__).resolve().parent.parent.parent
+        """
+        self._base_dir = Path(__file__).resolve().parent.parent.parent
 
         self._resources_dir = self._base_dir / "resources"
         self._app_icon_path = self._resources_dir / "icons" / "app_icon.ico"
