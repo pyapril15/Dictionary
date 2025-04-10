@@ -53,7 +53,7 @@ pipeline {
 				echo "Compiling executable..."
                 bat '''
                     call %VENV_DIR%\\Scripts\\activate.bat
-                    pyinstaller Dictionary.spec
+                    pyinstaller --clean Dictionary.spec
                 '''
             }
         }
