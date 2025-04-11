@@ -38,7 +38,7 @@ class DictionaryApp:
         # === Check if version is discontinued ===
         if is_version_discontinued(self._config):
             logger.warning("This version is discontinued. Forcing update.")
-            update_for_discontinued(self._config, self._show_forced_update)
+            update_for_discontinued(self._config, self._on_discontinued_found)
         else:
             check_for_updates(self._config, self._on_update_found)
 
@@ -79,7 +79,7 @@ class DictionaryApp:
         Forces user to update the app when the current version is discontinued.
         """
 
-        update_dialog = UpdateWindow(release_info, update_url, version_tuple)
+        update_dialog = UpdateWindow(release_info, update_url, version_tuple, True)
 
         def handle_close():
             logger.info("User cancelled mandatory update. Exiting app.")
