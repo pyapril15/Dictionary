@@ -5,14 +5,16 @@ Entry point for initializing and running the dictionary application using OOP pr
 import os
 import sys
 import subprocess
+from typing import Callable, Any
+
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
-from src.app_logic.config import AppConfig
-from src.app_logic.main_window import MainWindow
-from src.app_logic.logger import logger
-from src.app_ui.ui_update_window import UpdateWindow
-from src.app_logic.update_logic import check_for_updates, is_version_discontinued, update_for_discontinued
+from src import AppConfig
+from src import MainWindow
+from src import Log
+from src import UpdateWindow
+from src.app_services import check_for_updates, is_version_discontinued, update_for_discontinued
 
 
 class DictionaryApp:
@@ -21,81 +23,109 @@ class DictionaryApp:
     Handles initialization, configuration, and execution using OOP structure.
     """
 
-    def __init__(self):
-        self._config = AppConfig()
-        self._app = QApplication(sys.argv)
-        self._window = None
+    def __init__(self) -> None:
+        """
+        Initializes the application and prepares the main event loop.
+        """
+        self._config: AppConfig = AppConfig()
+        self._app: QApplication = QApplication(sys.argv)
+        self._window: MainWindow | None = None
         self.__initialize_app()
 
-    def __initialize_app(self):
-        # Application metadata setup
+    def __initialize_app(self) -> None:
+        """
+        Set up application metadata, stylesheet, and check for updates.
+        """
         self._app.aboutToQuit.connect(self._on_close)
         self._app.setWindowIcon(QIcon(self._config.app_icon_path))
         self.__load_stylesheet()
 
-        logger.info("Application initialized and ready.")
+        Log.info("Application initialized and ready.")
 
-        # === Check if version is discontinued ===
         if is_version_discontinued(self._config):
-            logger.warning("This version is discontinued. Forcing update.")
+            Log.warning("This version is discontinued. Forcing update.")
             update_for_discontinued(self._config, self._on_discontinued_found)
         else:
             check_for_updates(self._config, self._on_update_found)
 
-    def __load_stylesheet(self):
+    def __load_stylesheet(self) -> None:
+        """
+        Load the application's QSS stylesheet from the configured path.
+        """
         try:
             with open(self._config.stylesheet, 'r') as f:
                 qss = f.read()
             self._app.setStyleSheet(qss)
-            logger.info("QSS loaded successfully from: %s", self._config.stylesheet)
+            Log.info("QSS loaded successfully from: %s", self._config.stylesheet)
         except Exception as e:
-            logger.error("Failed to load QSS from %s: %s", self._config.stylesheet, str(e))
+            Log.error("Failed to load QSS from %s: %s", self._config.stylesheet, str(e))
 
     @staticmethod
-    def _on_update_found(release_info, update_url, version_tuple):
+    def _on_update_found(release_info: dict[str, Any], update_url: str, version_tuple: tuple[int, int, int]) -> None:
         """
         Callback executed when a newer version is detected.
+
+        Args:
+            release_info (dict): Release metadata from GitHub.
+            update_url (str): Download URL for the new version.
+            version_tuple (tuple): New version as a tuple (major, minor, patch).
         """
-        logger.info("Displaying update window...")
+        Log.info("Displaying update window...")
         update_dialog = UpdateWindow(release_info, update_url, version_tuple)
         update_dialog.exec()
 
     @staticmethod
-    def _on_close():
-        logger.info("Application is closing...")
+    def _on_close() -> None:
+        """
+        Callback triggered when the application is about to close.
+        """
+        Log.info("Application is closing...")
 
-    def run(self):
+    def run(self) -> None:
+        """
+        Show the main window and start the application event loop.
+        """
         self._window = MainWindow()
         self._window.show()
 
-        logger.info("Application GUI started successfully.")
+        Log.info("Application GUI started successfully.")
         try:
             sys.exit(self._app.exec())
         except Exception as e:
-            logger.error("Unhandled error in application loop: %s", str(e))
+            Log.error("Unhandled error in application loop: %s", str(e))
 
-    def _on_discontinued_found(self, release_info, update_url, version_tuple):
+    def _on_discontinued_found(
+            self,
+            release_info: dict[str, Any],
+            update_url: str,
+            version_tuple: tuple[int, int, int]
+    ) -> None:
         """
-        Forces user to update the app when the current version is discontinued.
+        Force the user to update the application due to version discontinuation.
+
+        Args:
+            release_info (dict): Release metadata.
+            update_url (str): URL to the new version.
+            version_tuple (tuple): Version information as a tuple.
         """
+        update_dialog = UpdateWindow(release_info, update_url, version_tuple, force_update=True)
 
-        update_dialog = UpdateWindow(release_info, update_url, version_tuple, True)
-
-        def handle_close():
-            logger.info("User cancelled mandatory update. Exiting app.")
+        def handle_close() -> None:
+            Log.info("User cancelled mandatory update. Exiting app.")
             sys.exit(0)
 
-        def handle_success():
-            logger.info("Mandatory update successful. Scheduling self-deletion.")
+        def handle_success() -> None:
+            Log.info("Mandatory update successful. Scheduling self-deletion.")
             self._schedule_self_delete()
 
         update_dialog.update_finished.connect(handle_success)
         update_dialog.rejected.connect(handle_close)
         update_dialog.exec()
 
-    def _schedule_self_delete(self):
+    def _schedule_self_delete(self) -> None:
         """
-        Generates and runs a batch script to delete this old app and run the new one.
+        Generates and executes a batch script to delete the old executable
+        and run the updated one after update is complete.
         """
         exe_path = os.path.abspath(sys.argv[0])
         folder = os.path.dirname(exe_path)
@@ -104,19 +134,20 @@ class DictionaryApp:
         new_exe_path = os.path.join(folder, new_exe)
 
         bat_script = f"""@echo off
-timeout /t 2 > NUL
-del "{exe_path}" > NUL 2>&1
-start "" "{new_exe_path}"
-"""
+        timeout /t 2 > NUL
+        del "{exe_path}" > NUL 2>&1
+        start "" "{new_exe_path}"
+        del "%~f0" > NUL 2>&1
+        """
 
         bat_path = os.path.join(folder, "delete_self.bat")
         try:
             with open(bat_path, "w") as f:
                 f.write(bat_script)
-            logger.info("Self-deletion script written: %s", bat_path)
+            Log.info("Self-deletion script written: %s", bat_path)
             subprocess.Popen(["cmd", "/c", bat_path], shell=True)
         except Exception as e:
-            logger.error("Failed to create or execute self-deletion script: %s", str(e))
+            Log.error("Failed to create or execute self-deletion script: %s", str(e))
 
         sys.exit(0)
 
