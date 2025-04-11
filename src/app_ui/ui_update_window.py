@@ -14,14 +14,15 @@ class UpdateWindow(QDialog):
     update_started = Signal()
     update_finished = Signal()
 
-    def __init__(self, update_info, update_file_url, versions, parent=None):
+    def __init__(self, update_info, update_file_url, versions, is_discontinued=False, parent=None):
         super().__init__(parent)
         self.update_info = update_info
         self.update_file_url = update_file_url
         self.versions = versions
+        self._is_discontinued = is_discontinued
         self.update_manager = None
 
-        self.setWindowTitle("Update Required" if not self.update_info else "Update Available")
+        self.setWindowTitle("Update Required" if self._is_discontinued else "Update Available")
         self.setFixedSize(400, 300)
 
         self._setup_ui()
@@ -50,10 +51,10 @@ class UpdateWindow(QDialog):
         self.setPalette(palette)
 
     def _create_labels(self):
-        title = "Update Required" if not self.update_info else "Update Available"
+        title = "Update Required" if self._is_discontinued else "Update Available"
         version_text = (
             f"Current Version: {self.versions[0]}\nLatest Version: {self.versions[1]}"
-            if self.update_file_url else "This version is discontinued. Please update."
+            if self.update_file_url else f"This version{(self.versions[0])} is discontinued. Please update."
         )
         self.title_label = QLabel(title, alignment=Qt.AlignCenter)
         self.title_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #333;")

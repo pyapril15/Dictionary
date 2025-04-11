@@ -1,3 +1,4 @@
+import sys
 import threading
 import requests
 from PySide6.QtCore import QObject, Signal
@@ -139,6 +140,18 @@ def check_for_updates(config, callback):
         callback(release_info, update_url, (current_version, latest_version))
     else:
         logger.info("You already have the latest version.")
+
+
+def update_for_discontinued(config, callback):
+    """Checks for updates on GitHub for discontinued and triggers the callback if newer version is found."""
+    current_version = config.app_version
+    release_info, update_url, latest_version = GitHubUpdateChecker.get_update_info()
+
+    if not update_url:
+        logger.critical("No update found to replace discontinued version.")
+        sys.exit(1)
+
+    callback(release_info, update_url, (current_version, latest_version))
 
 
 def is_version_discontinued(config) -> bool:
