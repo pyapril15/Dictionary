@@ -51,7 +51,7 @@ class _BaseConfig(metaclass=_SingletonMeta):
 
         # === App Metadata ===
         self._app_name = "Dictionary"
-        self._app_version = "1.0.0"
+        self._app_version = "1.0.1"
         self._app_description = "A desktop GUI dictionary powered by WordNet."
         self._developer = "Praveen Yadav"
 

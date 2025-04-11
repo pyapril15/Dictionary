@@ -12,7 +12,7 @@ from src.app_logic.config import AppConfig
 from src.app_logic.main_window import MainWindow
 from src.app_logic.logger import logger
 from src.app_ui.ui_update_window import UpdateWindow
-from src.app_logic.update_logic import check_for_updates, is_version_discontinued
+from src.app_logic.update_logic import check_for_updates, is_version_discontinued, update_for_discontinued
 
 
 class DictionaryApp:
@@ -38,7 +38,7 @@ class DictionaryApp:
         # === Check if version is discontinued ===
         if is_version_discontinued(self._config):
             logger.warning("This version is discontinued. Forcing update.")
-            self._show_forced_update()
+            update_for_discontinued(self._config, self._show_forced_update)
         else:
             check_for_updates(self._config, self._on_update_found)
 
@@ -74,19 +74,12 @@ class DictionaryApp:
         except Exception as e:
             logger.error("Unhandled error in application loop: %s", str(e))
 
-    def _show_forced_update(self):
+    def _on_discontinued_found(self, release_info, update_url, version_tuple):
         """
         Forces user to update the app when the current version is discontinued.
         """
-        from src.app_logic.update_logic import GitHubUpdateChecker
 
-        release_info, update_url, latest_version = GitHubUpdateChecker.get_update_info()
-
-        if not update_url:
-            logger.critical("No update found to replace discontinued version.")
-            sys.exit(1)
-
-        update_dialog = UpdateWindow(release_info, update_url, (self._config.app_version, latest_version))
+        update_dialog = UpdateWindow(release_info, update_url, version_tuple)
 
         def handle_close():
             logger.info("User cancelled mandatory update. Exiting app.")

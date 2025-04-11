@@ -3,7 +3,7 @@ pipeline {
 
     environment {
 		PROJECT_NAME = "Dictionary"
-        VERSION = "v1.0.0"
+        VERSION = "v1.0.1"
         REPO = "pyapril15/${PROJECT_NAME}"
 
         BUILD_DIR = "dist"
