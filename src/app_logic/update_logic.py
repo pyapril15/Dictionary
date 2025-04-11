@@ -87,9 +87,11 @@ class GitHubUpdateChecker:
     def get_latest_release(cls):
         try:
             logger.info("Fetching latest release...")
+
             response = requests.get(cls._releases_url)
             response.raise_for_status()
             releases = response.json()
+
             return releases[0] if releases else None
         except requests.RequestException as e:
             logger.error(f"Failed to fetch latest release: {str(e)}")
@@ -109,11 +111,8 @@ class GitHubUpdateChecker:
     @classmethod
     def get_update_info(cls):
         try:
-            response = requests.get(cls._releases_url)
-            response.raise_for_status()
-            releases = response.json()
-
-            for release in releases:
+            release = cls.get_latest_release()
+            if release:
                 version = release["tag_name"].lstrip("v")
                 for asset in release.get("assets", []):
                     if asset["name"].endswith(".exe"):

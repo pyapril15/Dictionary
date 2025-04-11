@@ -16,7 +16,7 @@ class UpdateWindow(QDialog):
 
     def __init__(self, update_info, update_file_url, versions, parent=None):
         super().__init__(parent)
-        self.update_info = update_info or {}
+        self.update_info = update_info
         self.update_file_url = update_file_url
         self.versions = versions
         self.update_manager = None
@@ -127,10 +127,6 @@ class UpdateWindow(QDialog):
         if confirm == QMessageBox.No:
             return
 
-        if not self.update_file_url:
-            self._fetch_update_from_github()
-            return
-
         self.update_started.emit()
         self.update_now_btn.setEnabled(False)
         self.progress_bar.setValue(0)
@@ -139,34 +135,6 @@ class UpdateWindow(QDialog):
             self._initialize_manager()
 
         self.update_manager.start_update()
-
-    def _fetch_update_from_github(self):
-        QMessageBox.information(self, "Checking for Updates", "Fetching latest update...")
-
-        owner, repo = "pyapril15", "Dictionary"
-        url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
-
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            release_data = response.json()
-
-            download_url = next(
-                (asset["browser_download_url"] for asset in release_data.get("assets", [])
-                 if asset["name"].endswith(".exe")),
-                None
-            )
-
-            if download_url:
-                self.update_file_url = download_url
-                self.versions = (self.versions[0], release_data["tag_name"].lstrip("v"))
-                self._initialize_manager()
-                self.update_manager.start_update()
-            else:
-                raise ValueError("No .exe found in release assets.")
-
-        except Exception as e:
-            QMessageBox.critical(self, "Update Error", f"Failed to fetch update: {str(e)}")
 
     def _on_update_complete(self):
         QMessageBox.information(self, "Update Complete", "The update has been downloaded successfully.")
