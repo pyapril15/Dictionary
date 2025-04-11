@@ -83,7 +83,7 @@ class GitHubUpdateChecker:
             return None, None, None
 
 
-def check_for_updates(config: AppConfig, callback: Callable[[Dict[str, Any], str, Tuple[str, str]], None]) -> None:
+def check_for_updates(config: AppConfig, callback) -> None:
     """
     Checks for updates on GitHub and triggers a callback if a newer version is found.
 
@@ -104,8 +104,7 @@ def check_for_updates(config: AppConfig, callback: Callable[[Dict[str, Any], str
         Log.info("You already have the latest version.")
 
 
-def update_for_discontinued(config: AppConfig,
-                            callback: Callable[[Dict[str, Any], str, Tuple[str, str]], None]) -> None:
+def update_for_discontinued(config: AppConfig, callback) -> None:
     """
     Handles upgrade if the current version is discontinued.
 

@@ -5,7 +5,7 @@ Entry point for initializing and running the dictionary application using OOP pr
 import os
 import sys
 import subprocess
-from typing import Callable, Any
+from typing import Any
 
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
@@ -61,7 +61,7 @@ class DictionaryApp:
             Log.error("Failed to load QSS from %s: %s", self._config.stylesheet, str(e))
 
     @staticmethod
-    def _on_update_found(release_info: dict[str, Any], update_url: str, version_tuple: tuple[int, int, int]) -> None:
+    def _on_update_found(release_info: dict[str, Any], update_url: str, version_tuple: tuple[str, str]) -> None:
         """
         Callback executed when a newer version is detected.
 
@@ -96,9 +96,9 @@ class DictionaryApp:
 
     def _on_discontinued_found(
             self,
-            release_info: dict[str, Any],
+            release_info,
             update_url: str,
-            version_tuple: tuple[int, int, int]
+            version_tuple: [str, str]
     ) -> None:
         """
         Force the user to update the application due to version discontinuation.
@@ -108,7 +108,7 @@ class DictionaryApp:
             update_url (str): URL to the new version.
             version_tuple (tuple): Version information as a tuple.
         """
-        update_dialog = UpdateWindow(release_info, update_url, version_tuple, force_update=True)
+        update_dialog = UpdateWindow(release_info, update_url, version_tuple, True)
 
         def handle_close() -> None:
             Log.info("User cancelled mandatory update. Exiting app.")
