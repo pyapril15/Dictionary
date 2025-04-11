@@ -78,7 +78,15 @@ class DictionaryApp:
         """
         Forces user to update the app when the current version is discontinued.
         """
-        update_dialog = UpdateWindow(None, None, (self._config.app_version, ""))
+        from src.app_logic.update_logic import GitHubUpdateChecker
+
+        release_info, update_url, latest_version = GitHubUpdateChecker.get_update_info()
+
+        if not update_url:
+            logger.critical("No update found to replace discontinued version.")
+            sys.exit(1)
+
+        update_dialog = UpdateWindow(release_info, update_url, (self._config.app_version, latest_version))
 
         def handle_close():
             logger.info("User cancelled mandatory update. Exiting app.")
