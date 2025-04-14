@@ -6,15 +6,11 @@ from PyInstaller.utils.hooks import collect_submodules
 
 # === Project Directories ===
 project_root = Path(sys.argv[0]).resolve().parent
-resources_dir = project_root / "resources"
-icons_dir = resources_dir / "icons"
-styles_dir = resources_dir / "styles"
 
-# === Resource Data Files (will be extracted to _MEIPASS/resources/...) ===
 datas = [
-    (str(icons_dir / "app_icon.ico"), "resources/icons"),
-    (str(icons_dir / "search_icon.svg"), "resources/icons"),
-    (str(styles_dir / "stylesheet.qss"), "resources/styles"),
+    ('resources/icons/app_icon.ico', 'resources/icons'),
+    ('resources/icons/search_icon.svg', 'resources/icons'),
+    ('resources/styles/stylesheet.qss', 'resources/styles')
 ]
 
 # === Hidden Imports for NLTK WordNet support ===
@@ -67,5 +63,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=str(icons_dir / "app_icon.ico"),
+    icon=['resources\\icons\\app_icon.ico'],
 )

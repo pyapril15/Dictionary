@@ -1,14 +1,15 @@
 """
 Update dialog window for the Dictionary application.
 
-This module defines a Qt-based dialog that allows the user to:
-- View update details from GitHub.
-- Confirm and initiate the update process.
-- Track progress visually via a progress bar.
-
-The dialog adapts depending on whether the current version is discontinued
-or if a newer version is simply available.
+This module provides a Qt-based update dialog that:
+- Notifies the user of available updates.
+- Displays update details.
+- Handles the update download process via UpdateManager.
+- Uses a progress bar to show real-time progress.
 """
+
+from abc import ABC, abstractmethod
+from typing import Optional, Tuple, Dict, Any
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QLinearGradient, QColor, QPalette, QBrush
@@ -16,20 +17,16 @@ from PySide6.QtWidgets import (
     QDialog, QLabel, QPushButton, QVBoxLayout, QProgressBar,
     QMessageBox, QScrollArea, QWidget
 )
-from typing import Optional, Tuple, Dict, Any
 
-from src.app_logic import UpdateManager
+from src.app_logic.log import Log
+from src.app_logic.update_manager import UpdateManager
+from src.utils.meta import MetaQObjectABC
 
 
-class UpdateWindow(QDialog):
+class AbstractUpdateWindow(QDialog, ABC, metaclass=MetaQObjectABC):
     """
-    Dialog window for checking, displaying, and applying updates.
-
-    :param update_info: Release data from GitHub including version notes.
-    :param update_file_url: URL to the .exe installer of the latest version.
-    :param versions: Tuple of (current_version, latest_version).
-    :param is_discontinued: True if the current version is no longer supported.
-    :param parent: Optional parent widget.
+    Abstract base class for the update dialog window.
+    Defines the structure and required methods for UI setup and signal handling.
     """
 
     update_started = Signal()
@@ -40,40 +37,62 @@ class UpdateWindow(QDialog):
             update_info: Dict[str, Any],
             update_file_url: Optional[str],
             versions: Tuple[str, str],
+            log: Log,
             is_discontinued: bool = False,
             parent: Optional[QWidget] = None
     ) -> None:
+        """
+        Initialize the abstract dialog window.
+
+        Args:
+            update_info (dict): Metadata about the update (title, body).
+            update_file_url (str | None): Direct download URL of the update file.
+            versions (tuple): Tuple of (current_version, latest_version).
+            is_discontinued (bool): If True, forces the update dialog to block the user.
+            parent (QWidget | None): Optional parent QWidget.
+        """
         super().__init__(parent)
         self.update_info = update_info
         self.update_file_url = update_file_url
         self.versions = versions
+        self._log = log
         self._is_discontinued = is_discontinued
         self.update_manager: Optional[UpdateManager] = None
 
         self.setWindowTitle("Update Required" if self._is_discontinued else "Update Available")
         self.setFixedSize(400, 300)
 
-        self._setup_ui()
-        self._setup_signals()
+        self._init_ui()
+        self._init_signals()
 
         if self.update_file_url:
-            self._initialize_manager()
+            self._init_update_manager()
 
     def showEvent(self, event) -> None:
-        """Handles dialog display event and applies gradient background."""
+        """Apply gradient background when the dialog is shown."""
         super().showEvent(event)
         self._apply_gradient_background()
 
-    def _setup_ui(self) -> None:
-        """Initializes all UI elements."""
+    def _init_ui(self) -> None:
+        """Initialize UI components (implemented by subclasses)."""
         self._create_labels()
         self._create_scroll_area()
         self._create_progress_bar()
         self._create_buttons()
         self._assemble_layout()
 
+    def _init_signals(self) -> None:
+        """Setup signals between update manager and UI."""
+        if self.update_manager:
+            self._connect_signals()
+
+    def _init_update_manager(self) -> None:
+        """Initialize the UpdateManager if a valid URL is provided."""
+        self.update_manager = UpdateManager(self.update_file_url, self.versions[1], self._log)
+        self._connect_signals()
+
     def _apply_gradient_background(self) -> None:
-        """Applies a vertical gradient background to the dialog."""
+        """Apply a vertical color gradient background to the dialog."""
         palette = QPalette()
         gradient = QLinearGradient(0, 0, 0, self.height())
         gradient.setColorAt(0, QColor("#FFDEE9"))
@@ -81,13 +100,57 @@ class UpdateWindow(QDialog):
         palette.setBrush(QPalette.Window, QBrush(gradient))
         self.setPalette(palette)
 
+    @abstractmethod
     def _create_labels(self) -> None:
-        """Creates version title and detail labels."""
+        """Create title and version information labels."""
+        pass
+
+    @abstractmethod
+    def _create_scroll_area(self) -> None:
+        """Create scrollable area to show update description."""
+        pass
+
+    @abstractmethod
+    def _create_progress_bar(self) -> None:
+        """Create and style the update progress bar."""
+        pass
+
+    @abstractmethod
+    def _create_buttons(self) -> None:
+        """Create and style buttons for update interaction."""
+        pass
+
+    @abstractmethod
+    def _assemble_layout(self) -> None:
+        """Assemble all UI components into the layout."""
+        pass
+
+    @abstractmethod
+    def _connect_signals(self) -> None:
+        """Connect update manager signals to UI elements."""
+        pass
+
+
+class UpdateWindow(AbstractUpdateWindow):
+    """
+    Concrete implementation of the update dialog.
+    Handles user interaction, update logic, and UI rendering.
+    """
+
+    def __init__(self, update_info: Dict[str, Any], update_file_url: Optional[str], versions: Tuple[str, str],
+                 is_discontinued: bool, log: Log):
+        super().__init__(update_info, update_file_url, versions, log, is_discontinued)
+
+        self._log_update = log.update
+
+    def _create_labels(self) -> None:
+        """Create title and version info labels with styling."""
         title = "Update Required" if self._is_discontinued else "Update Available"
         version_text = (
             f"This version {self.versions[0]} is discontinued. Please update."
             if self._is_discontinued else f"Current Version: {self.versions[0]}\nLatest Version: {self.versions[1]}"
         )
+
         self.title_label = QLabel(title, alignment=Qt.AlignCenter)
         self.title_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #333;")
 
@@ -95,7 +158,7 @@ class UpdateWindow(QDialog):
         self.version_label.setStyleSheet("font-size: 14px; color: #555;")
 
     def _create_scroll_area(self) -> None:
-        """Creates scrollable area to show update description."""
+        """Create scrollable description area from update_info['body']."""
         description = self.update_info.get("body", "")
         self.scroll_area: Optional[QScrollArea] = None
 
@@ -104,7 +167,7 @@ class UpdateWindow(QDialog):
             self.scroll_area.setWidgetResizable(True)
 
             self.description_label = QLabel(description)
-            self.description_label.setStyleSheet("font-size: 12px; color: #444; background: #fff")
+            self.description_label.setStyleSheet("font-size: 12px; color: #444; background: #fff;")
             self.description_label.setWordWrap(True)
 
             scroll_content = QWidget()
@@ -114,7 +177,7 @@ class UpdateWindow(QDialog):
             self.scroll_area.setWidget(scroll_content)
 
     def _create_progress_bar(self) -> None:
-        """Creates the progress bar for download status."""
+        """Create and style a horizontal progress bar for downloads."""
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(0)
         self.progress_bar.setStyleSheet("""
@@ -123,7 +186,7 @@ class UpdateWindow(QDialog):
         """)
 
     def _create_buttons(self) -> None:
-        """Creates the update button."""
+        """Create the 'Update Now' button with styling and logic."""
         self.update_now_btn = QPushButton("Update Now")
         self.update_now_btn.setEnabled(self.update_file_url is not None)
         self.update_now_btn.setStyleSheet(
@@ -132,7 +195,7 @@ class UpdateWindow(QDialog):
         self.update_now_btn.clicked.connect(self._on_update_clicked)
 
     def _assemble_layout(self) -> None:
-        """Lays out the UI elements vertically."""
+        """Add all widgets into a vertical layout for the dialog."""
         layout = QVBoxLayout()
         layout.addWidget(self.title_label)
         layout.addWidget(self.version_label)
@@ -142,43 +205,54 @@ class UpdateWindow(QDialog):
         layout.addWidget(self.update_now_btn)
         self.setLayout(layout)
 
-    def _setup_signals(self) -> None:
-        """Connects signals from the update manager."""
-        if self.update_manager:
-            self._connect_signals()
-
     def _connect_signals(self) -> None:
-        """Connects manager signals to progress bar and completion handler."""
-        self.update_manager.progress_signal.connect(self.progress_bar.setValue)
-        self.update_manager.download_complete_signal.connect(self._on_update_complete)
-
-    def _initialize_manager(self) -> None:
-        """Initializes the update manager for handling the update process."""
-        self.update_manager = UpdateManager(self.update_file_url, self.versions[1])
-        self._connect_signals()
+        """Link progress and completion signals from UpdateManager."""
+        if self.update_manager:
+            self.update_manager.progress_signal.connect(self.progress_bar.setValue)
+            self.update_manager.download_complete_signal.connect(self._on_update_complete)
 
     def _on_update_clicked(self) -> None:
-        """Handles the user clicking the 'Update Now' button."""
-        confirm = QMessageBox.question(
-            self, "Confirm Update",
-            f"Are you sure you want to update to version {self.versions[1]}?",
-            QMessageBox.Yes | QMessageBox.No
-        )
+        """
+        Handle the 'Update Now' button click.
 
-        if confirm == QMessageBox.No:
-            return
+        Shows confirmation dialog and initiates the update process.
+        """
+        try:
+            self._log_update.info("User clicked 'Update Now'.")
+            confirm = QMessageBox.question(
+                self, "Confirm Update",
+                f"Are you sure you want to update to version {self.versions[1]}?",
+                QMessageBox.Yes | QMessageBox.No
+            )
 
-        self.update_started.emit()
-        self.update_now_btn.setEnabled(False)
-        self.progress_bar.setValue(0)
+            if confirm == QMessageBox.No:
+                self._log_update.info("User declined update.")
+                return
 
-        if not self.update_manager:
-            self._initialize_manager()
+            self.update_started.emit()
+            self.update_now_btn.setEnabled(False)
+            self.progress_bar.setValue(0)
 
-        self.update_manager.start_update()
+            if not self.update_manager:
+                self._init_update_manager()
+
+            self.update_manager.start_update()
+            self._log_update.info("Update process started.")
+        except Exception as e:
+            self._log_update.exception("Error on update button click: %s", e)
+            QMessageBox.critical(self, "Update Error", "An error occurred while starting the update.")
 
     def _on_update_complete(self) -> None:
-        """Triggered when the update is downloaded successfully."""
-        QMessageBox.information(self, "Update Complete", "The update has been downloaded successfully.")
-        self.update_finished.emit()
-        self.close()
+        """
+        Handle completion of the update process.
+
+        Closes the dialog and notifies the user.
+        """
+        try:
+            self._log_update.info("Update download complete.")
+            QMessageBox.information(self, "Update Complete", "The update has been downloaded successfully.")
+            self.update_finished.emit()
+            self.close()
+        except Exception as e:
+            self._log_update.exception("Error completing update: %s", e)
+            QMessageBox.critical(self, "Error", "An error occurred after the update completed.")
